@@ -14,7 +14,7 @@ headers = ['Address', 'Status']
 result = []
 
 for site in sites:
-    answer = resolver.query(site)
+    answer = resolver.resolve(site)
     ip_list = []
 
     for data in answer:
