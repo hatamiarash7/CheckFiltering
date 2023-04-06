@@ -7,7 +7,7 @@ Check URLs that filtered ( or not ) in Iran
 ## Requirements
 
 ```bash
-python -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ## Run
@@ -16,6 +16,7 @@ python -m pip install -r requirements.txt
 
     ```text
     github.com
+    arash-hatami.ir
     facebook.com
     gitlab.com
     google.com
