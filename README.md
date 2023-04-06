@@ -1,6 +1,6 @@
 # Check Filtering
 
-Check URLs that <font color='red'>filtered</font> ( or not ) in Iran
+Check URLs that filtered ( or not ) in Iran
 
 - Install requirements
 
@@ -10,7 +10,7 @@ python -m pip install -r requirements.txt
 
 - Update `list` and add your website URLs
 
-```
+```text
 github.com
 facebook.com
 gitlab.com
@@ -26,32 +26,4 @@ stackoverflow.com
 
 - Run the checker
 
-```bash
-> python check.py
-
-|-----------------|---------------|
-|Address          |    Status     |
-|=================================|
-|github.com       |     Free      |
-|-----------------|---------------|
-|facebook.com     |    Blocked    |
-|-----------------|---------------|
-|gitlab.com       |     Free      |
-|-----------------|---------------|
-|google.com       |     Free      |
-|-----------------|---------------|
-|pornhub.com      |    Blocked    |
-|-----------------|---------------|
-|pypi.org         |     Free      |
-|-----------------|---------------|
-|twitter.com      |    Blocked    |
-|-----------------|---------------|
-|gsm.ir           |     Free      |
-|-----------------|---------------|
-|xnxx.com         |    Blocked    |
-|-----------------|---------------|
-|cloudflare.com   |     Free      |
-|-----------------|---------------|
-|stackoverflow.com|     Free      |
-|-----------------|---------------|
-```
+![sc](.github/sc.png)
