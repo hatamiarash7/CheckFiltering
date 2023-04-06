@@ -53,13 +53,13 @@ jobs:
             APP_VERSION=${{ steps.slug.outputs.version }}"
             DATE_CREATED=${{ steps.date.outputs.date }}
           tags: |
-            hatamiarash7/asn-by-country:${{ steps.slug.outputs.version }}
-            hatamiarash7/asn-by-country:latest
+            hatamiarash7/check-filtering:${{ steps.slug.outputs.version }}
+            hatamiarash7/check-filtering:latest
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: hatamiarash7/asn-by-country:latest
+          image-ref: hatamiarash7/check-filtering:latest
           exit-code: "0"
           ignore-unfixed: true
           vuln-type: "os,library"
