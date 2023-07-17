@@ -15,7 +15,7 @@ WORKDIR /app
 COPY ./requirements.txt /app/
 
 RUN pip3 install --no-cache-dir pip \
- && pip3 install --no-cache-dir -r requirements.txt
+    && pip3 install --no-cache-dir -r requirements.txt
 
 COPY ./check.py /app/
 
