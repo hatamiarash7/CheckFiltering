@@ -2,28 +2,25 @@ import dns.resolver
 from click import style
 from columnar import columnar
 
-file = open('list')
-sites = file.readlines()
-sites = [site.replace("\n", "") for site in sites]
-file.close()
-
+blocked_ips = {'10.10.34.34', '10.10.34.35', '10.10.34.36'}
 resolver = dns.resolver.Resolver()
 resolver.nameservers = ['8.8.8.8']
-
 headers = ['Address', 'Status']
 result = []
 
+with open('list') as file:
+    sites = [site.strip() for site in file]
+
 for site in sites:
-    answer = resolver.resolve(site)
-    ip_list = []
+    try:
+        answer = resolver.resolve(site)
+        ip_list = [data.address for data in answer]
+    except dns.resolver.NXDOMAIN:
+        ip_list = []
 
-    for data in answer:
-        ip_list.append(data.address)
+    status = 'Blocked' if any(ip in blocked_ips for ip in ip_list) else 'Free'
+    result.append([site, status])
 
-    if any(ip in '10.10.34.34 10.10.34.35 10.10.34.36' for ip in ip_list):
-        result.append([site, 'Blocked'])
-    else:
-        result.append([site, 'Free'])
 
 patterns = [
     ('Blocked', lambda text: style(text, fg='red')),
