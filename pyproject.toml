@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "check-filter"
+version = "2.0.0"
+license = "MIT"
+description = "Check URLs that filtered ( or not ) in Iran."
+authors = ["Arash Hatami <hatamiarash7@gmail.com>"]
+readme = "README.md"
+homepage = "https://arash-hatami.ir"
+repository = "https://github.com/hatamiarash7/CheckFiltering"
+keywords = ["internet", "censorship", "filtering"]
+classifiers = [
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 5 - Production/Stable"
+]
+packages = [{include = "check_filter"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+typer = {extras = ["all"], version = "^0.9.0"}
+click = "^8.1.6"
+dnspython = "^2.4.0"
+columnar = "^1.4.1"
+validators = "^0.20.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.17.4"
+pytest = "^7"
+
+[tool.poetry.scripts]
+check-filter = "check_filter.cli:app"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/hatamiarash7/CheckFiltering/issues"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
