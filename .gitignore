@@ -162,4 +162,5 @@ cython_debug/
 
 # Other
 
-config.toml
+.vscode
+.idea
