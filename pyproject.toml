@@ -24,9 +24,7 @@ packages = [{include = "check_filter"}]
 [tool.poetry.dependencies]
 python = "^3.8"
 typer = {extras = ["all"], version = "^0.9.0"}
-click = "^8.1.6"
 dnspython = "^2.4.0"
-columnar = "^1.4.1"
 validators = "^0.20.0"
 
 [tool.poetry.group.test.dependencies]
