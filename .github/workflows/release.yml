@@ -3,6 +3,7 @@ name: Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   init:
@@ -14,61 +15,75 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-  docker:
-    name: 🐳 Build Docker image
-    runs-on: ubuntu-20.04
+  release:
+    name: Release
     needs: init
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Get repository info
-        uses: gacts/github-slug@v1
-        id: slug
+      - name: Get version
+        run: |
+          APP_VERSION=${GITHUB_REF##*/}
+          echo "APP_VERSION=${APP_VERSION:1}" >> $GITHUB_ENV
 
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to Dockerhub
-        uses: docker/login-action@v2
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          username: ${{ secrets.DOCKER_LOGIN }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          python-version: ${{ matrix.python-version }}
 
-      - name: Get Current Date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
-
-      - name: Build & Push Docker image
-        uses: docker/build-push-action@v4
+      - name: Cache Poetry
+        uses: actions/cache@v3
         with:
-          context: .
-          file: Dockerfile
-          push: true
-          platforms: linux/amd64,linux/386,linux/arm64,linux/arm/v6,linux/arm/v7
-          build-args: |
-            APP_VERSION=${{ steps.slug.outputs.version }}"
-            DATE_CREATED=${{ steps.date.outputs.date }}
-          tags: |
-            hatamiarash7/check-filtering:${{ steps.slug.outputs.version }}
-            hatamiarash7/check-filtering:latest
+          path: ~/.local
+          key: poetry-1.5-0
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
         with:
-          image-ref: hatamiarash7/check-filtering:latest
-          exit-code: "0"
-          ignore-unfixed: true
-          vuln-type: "os,library"
-          severity: "CRITICAL,HIGH"
-          format: "template"
-          template: "@/contrib/sarif.tpl"
-          output: "trivy-results.sarif"
+          version: "1.5.0"
+          virtualenvs-create: true
+          virtualenvs-in-project: true
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v3
         with:
-          sarif_file: "trivy-results.sarif"
+          path: .venv
+          key: pydeps-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Test
+        run: poetry run pytest
+
+      - name: Build
+        run: poetry build
+
+      - name: Publish - Github
+        uses: softprops/action-gh-release@v1
+        if: ${{ matrix.python-version == '3.10' }}
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            ./dist/check_filter-${{ env.APP_VERSION }}-py3-none-any.whl
+            ./dist/check_filter-${{ env.APP_VERSION }}.tar.gz
+
+      - name: Publish - PyPi
+        uses: JRubics/poetry-publish@v1.17
+        if: ${{ matrix.python-version == '3.10' }}
+        with:
+          pypi_token: ${{ secrets.PYPI_TOKEN }}
+          ignore_dev_requirements: "yes"

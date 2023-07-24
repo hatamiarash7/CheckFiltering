@@ -1,18 +1,42 @@
 # Check Filtering
 
-[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/) [![GitHub release](https://img.shields.io/github/release/hatamiarash7/CheckFiltering.svg)](https://GitHub.com/hatamiarash7/CheckFiltering/releases/) [![CodeQL](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/codeql-analysis.yml) [![GitGuardian](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/gitguardian.yml/badge.svg?branch=master)](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/gitguardian.yml) [![Release](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/release.yml/badge.svg)](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/release.yml)
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/) [![GitHub release](https://img.shields.io/github/release/hatamiarash7/CheckFiltering.svg)](https://GitHub.com/hatamiarash7/CheckFiltering/releases/) [![Release](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/release.yml/badge.svg)](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/release.yml) ![GitHub](https://img.shields.io/github/license/hatamiarash7/jira-asset-manager)
 
 Check URLs that filtered ( or not ) in Iran
 
 ## Requirements
 
+- Python 3.8+
+
+## Install
+
 ```bash
-python3 -m pip install -r requirements.txt
+pip install check-filter
 ```
 
-## Run
+## Usage
 
-1. Update `list` and add your website URLs
+You can use this package in three ways:
+
+1. Single domain
+
+   ```bash
+   check-filter domain github.com
+   ```
+
+   ![single](.github/single.png)
+
+2. Multiple domains
+
+   ```bash
+   check-filter domains github.com,google.com
+   ```
+
+   ![single](.github/multiple.png)
+
+3. From a file
+
+   Create a file from your website URLs. Put each URL in a new line.
 
     ```text
     github.com
@@ -29,9 +53,13 @@ python3 -m pip install -r requirements.txt
     stackoverflow.com
     ```
 
-2. Run the script
+    Then run the following command:
 
-    ![sc](.github/sc.png)
+    ```bash
+    check-filter file list
+    ```
+
+    ![single](.github/file.png)
 
 ---
 
