@@ -2,7 +2,7 @@
 
 from typing import Optional
 import typer
-from rich import print
+from rich import print as p
 
 from check_filter import (
     __app_name__,
@@ -21,7 +21,7 @@ app = typer.Typer(
 
 def _version_callback(value: bool) -> None:
     if value:
-        print(
+        p(
             f"{__app_name__} [bold cyan]v{__version__}[/bold cyan] :boom:"
         )
         raise typer.Exit()
@@ -35,16 +35,16 @@ def domain(domain: str) -> None:
         domain (str): Domain's name
     """
     if utils.validate_domain(domain):
-        print(f"[yellow]Checking [italic]{domain}[/italic] ...[/yellow]")
+        p(f"[yellow]Checking [italic]{domain}[/italic] ...[/yellow]")
         result = check.check(domain=domain)
-        print(utils.print_result(domain=domain, result=result))
+        p(utils.print_result(domain=domain, result=result))
         return
 
-    print(f"[red]The `{domain}` is not a valid domain name![/red]")
+    p(f"[red]The `{domain}` is not a valid domain name![/red]")
 
 
 @app.command(epilog=__epilog__)
-def domains(domains: str):
+def domains(domains: str) -> None:
     """Check filtering status for [green]multiple domains[/green].
     Give a comma separated list of domains.
 
@@ -52,16 +52,16 @@ def domains(domains: str):
         domains (str): A comma separated list of domains
     """
     result = []
-    print("[yellow]Checking domains ...[/yellow]")
+    p("[yellow]Checking domains ...[/yellow]")
 
     for domain in domains.split(","):
         if utils.validate_domain(domain):
             status = check.check(domain=domain)
             result.append([domain, status])
         else:
-            print(f"[red]The `{domain}` is not a valid domain name![/red]")
+            p(f"[red]The `{domain}` is not a valid domain name![/red]")
+
     utils.print_table(result)
-    return
 
 
 @app.command(epilog=__epilog__)
@@ -72,8 +72,8 @@ def file(path: str):
     Args:
         path (str): File path of domains
     """
-    print("[yellow]Checking domains ...[/yellow]")
-    with open('list') as file:
+    p("[yellow]Checking domains ...[/yellow]")
+    with open(file=path, encoding="utf-8", mode='r') as file:
         sites = [site.strip() for site in file]
         result = []
 
@@ -82,14 +82,13 @@ def file(path: str):
                 status = check.check(domain=domain)
                 result.append([domain, status])
             else:
-                print(f"[red]The `{domain}` is not a valid domain name![/red]")
+                p(f"[red]The `{domain}` is not a valid domain name![/red]")
         utils.print_table(result)
-        return
 
 
 @app.callback()
 def main(
-    version: Optional[bool] = typer.Option(
+    version: Optional[bool] = typer.Option(  # pylint: disable=unused-argument
         None,
         "--version",
         "-v",
@@ -98,4 +97,5 @@ def main(
         is_eager=True,
     )
 ) -> None:
+    """It's the version printer for CLI"""
     return
