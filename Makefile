@@ -1,5 +1,8 @@
-.PHONY: install lock run test lint help
+.PHONY: clean install lock run build test lint help
 .DEFAULT_GOAL := help
+
+clean: ## Clean build files
+	rm -rf dist
 
 install: ## Install dependencies
 	poetry install
@@ -9,6 +12,9 @@ lock: ## Update poetry.lock
 
 run: ## Run project
 	poetry run katran-master
+
+build: clean ## Build package
+	poetry build
 
 test: ## Run tests
 	poetry run pytest
