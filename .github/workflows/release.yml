@@ -67,7 +67,9 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Test
-        run: poetry run pytest
+        run: |
+          echo "I_AM_CI=1" >> $GITHUB_ENV
+          poetry run pytest
 
       - name: Build
         run: poetry build
