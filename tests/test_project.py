@@ -6,7 +6,7 @@ def test_name():
 
 
 def test_version():
-    assert __version__ == '2.0.2'
+    assert __version__ == '2.0.3'
 
 
 def test_author():

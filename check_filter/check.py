@@ -1,9 +1,12 @@
 """It's the checker module for filtering status"""
+import os
 import dns.resolver
 
 blocked_ips = {'10.10.34.34', '10.10.34.35', '10.10.34.36'}
 resolver = dns.resolver.Resolver()
-resolver.nameservers = ['8.8.8.8']
+resolver.nameservers = [
+    '178.22.122.100' if 'I_AM_CI' in os.environ else '8.8.8.8'
+]
 headers = ['Address', 'Status']
 
 
