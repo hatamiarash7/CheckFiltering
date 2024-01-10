@@ -1,9 +1,9 @@
 import pytest
-from validators.utils import ValidationFailure
+from validators.utils import ValidationError
 from check_filter import utils
 
 
-@pytest.mark.xfail(raises=ValidationFailure)
+@pytest.mark.xfail(raises=ValidationError)
 def test_validate_domain():
     assert utils.validate_domain("domain.com") is True
     utils.validate_domain("domain") is False
