@@ -1,10 +1,13 @@
 """Utils module"""
+import asyncio
 
 import validators
+from rich import print as p
 from rich.console import Console
+from rich.live import Live
 from rich.table import Table
 
-console = Console()
+from check_filter import DomainChecker
 
 
 def validate_domain(domain: str) -> bool:
@@ -13,30 +16,17 @@ def validate_domain(domain: str) -> bool:
     Args:
         domain (str): Domain's name
 
-    Returns:
-        bool: Result of validation
+    Returns: is domain valid
     """
-    return validators.domain(domain)
+    is_valid = validators.domain(domain)
+    if not is_valid:
+        p(f"[red]The `{domain}` is not a valid domain name![/red]")
+
+    return is_valid
 
 
-def print_result(domain: str, result: bool) -> str:
+async def print_result(domains: list) -> None:
     """Print a pretty result for CLI
-
-    Args:
-        domain (str): Domain's name
-        result (bool): Blocking result
-
-    Returns:
-        str: Printable result
-    """
-    if result:
-        return f"\nThe `[italic]{domain}[/italic]` is [green]free[/green] in Iran :smiley:"
-
-    return f"\nThe `[italic]{domain}[/italic]` is [red]blocked[/red] in Iran :x:"
-
-
-def print_table(domains: list) -> None:
-    """Print a pretty table for CLI
 
     Args:
         domains (list): List of [domain, status] of blocking result
@@ -45,9 +35,17 @@ def print_table(domains: list) -> None:
     table.add_column("Domain", justify="left", no_wrap=True)
     table.add_column("Status", justify="left", no_wrap=True)
 
-    for domain in domains:
-        table.add_row(
-            f"[red]{domain[0]}[/red]" if not domain[1] else domain[0],
-            "[green]Free[/green]" if domain[1] else "[red]Blocked[/red] :x:")
+    domain_checker = DomainChecker()
 
-    console.print("\n", table)
+    tasks = set()
+
+    with Live(table, auto_refresh=False) as live_table:
+        for d in domains:
+            tasks.add(asyncio.create_task(domain_checker.acheck(d), name=f"domain-check-{d}"))
+
+        for future in asyncio.as_completed(tasks):
+            domain, status = await future
+            table.add_row(
+                f"[red]{domain}[/red]" if not status else domain,
+                "[green]Free[/green]" if status else "[red]Blocked[/red] :x:")
+            live_table.refresh()

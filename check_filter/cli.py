@@ -1,4 +1,5 @@
 """This module provides the CheckFilter CLI."""
+import asyncio
 
 from typing import Optional
 import typer
@@ -9,7 +10,6 @@ from check_filter import (
     __version__,
     __description__,
     __epilog__,
-    check,
     utils
 )
 
@@ -34,13 +34,12 @@ def domain(domain: str) -> None:
     Args:
         domain (str): Domain's name
     """
-    if utils.validate_domain(domain):
-        p(f"[yellow]Checking [italic]{domain}[/italic] ...[/yellow]")
-        result = check.check(domain=domain)
-        p(utils.print_result(domain=domain, result=result))
-        return
+    if not utils.validate_domain(domain):
+        p(f"[red]The `{domain}` is not a valid domain name![/red]")
+        raise typer.Exit()
 
-    p(f"[red]The `{domain}` is not a valid domain name![/red]")
+    p(f"[yellow]Checking [italic]{domain}[/italic] ...[/yellow]")
+    asyncio.run(utils.print_result([domain]))
 
 
 @app.command(epilog=__epilog__)
@@ -51,17 +50,13 @@ def domains(domains: str) -> None:
     Args:
         domains (str): A comma separated list of domains
     """
-    result = []
     p("[yellow]Checking domains ...[/yellow]")
+    domains = domains.split(",")
+    domain_validity_checks = [utils.validate_domain(domain) for domain in domains]
+    if not all(domain_validity_checks):
+        raise typer.Exit()
 
-    for domain in domains.split(","):
-        if utils.validate_domain(domain):
-            status = check.check(domain=domain)
-            result.append([domain, status])
-        else:
-            p(f"[red]The `{domain}` is not a valid domain name![/red]")
-
-    utils.print_table(result)
+    asyncio.run(utils.print_result(domains))
 
 
 @app.command(epilog=__epilog__)
@@ -74,28 +69,29 @@ def file(path: str):
     """
     p("[yellow]Checking domains ...[/yellow]")
     with open(file=path, encoding="utf-8", mode='r') as file:
-        sites = [site.strip() for site in file]
-        result = []
+        domains = [domain.strip() for domain in file]
 
-        for domain in sites:
-            if utils.validate_domain(domain):
-                status = check.check(domain=domain)
-                result.append([domain, status])
-            else:
-                p(f"[red]The `{domain}` is not a valid domain name![/red]")
-        utils.print_table(result)
+    domain_validity_checks = [utils.validate_domain(domain) for domain in domains]
+    if not all(domain_validity_checks):
+        raise typer.Exit()
+
+    asyncio.run(utils.print_result(domains))
 
 
 @app.callback()
 def main(
-    version: Optional[bool] = typer.Option(  # pylint: disable=unused-argument
-        None,
-        "--version",
-        "-v",
-        help="Show the application's version.",
-        callback=_version_callback,
-        is_eager=True,
-    )
+        version: Optional[bool] = typer.Option(  # pylint: disable=unused-argument
+            None,
+            "--version",
+            "-v",
+            help="Show the application's version.",
+            callback=_version_callback,
+            is_eager=True,
+        )
 ) -> None:
     """It's the version printer for CLI"""
     return
+
+
+if __name__ == "__main__":
+    app()
