@@ -7,7 +7,11 @@ class DomainChecker:
     headers = ['Address', 'Status']
 
     def __init__(self, blocked_ips=None):
-        self.blocked_ips = blocked_ips or {'10.10.34.34', '10.10.34.35', '10.10.34.36'}
+        self.blocked_ips = blocked_ips or {
+            '10.10.34.34',
+            '10.10.34.35',
+            '10.10.34.36',
+        }
 
         self.resolver = dns.asyncresolver.Resolver(configure=False)
         self.resolver.nameservers = [

@@ -52,7 +52,9 @@ def domains(domains: str) -> None:
     """
     p("[yellow]Checking domains ...[/yellow]")
     domains = domains.split(",")
-    domain_validity_checks = [utils.validate_domain(domain) for domain in domains]
+    domain_validity_checks = [
+        utils.validate_domain(domain) for domain in domains
+    ]
     if not all(domain_validity_checks):
         raise typer.Exit()
 
@@ -71,7 +73,9 @@ def file(path: str):
     with open(file=path, encoding="utf-8", mode='r') as file:
         domains = [domain.strip() for domain in file]
 
-    domain_validity_checks = [utils.validate_domain(domain) for domain in domains]
+    domain_validity_checks = [
+        utils.validate_domain(domain) for domain in domains
+    ]
     if not all(domain_validity_checks):
         raise typer.Exit()
 
