@@ -4,6 +4,9 @@ import dns.asyncresolver
 
 
 class DomainChecker:
+    """
+    Checks if the domain is blocked or not
+    """
     headers = ['Address', 'Status']
 
     def __init__(self, blocked_ips=None):
