@@ -1,11 +1,20 @@
 import pytest
 import dns
-from check_filter import check
+from check_filter import DomainChecker
 
 
-def test_check():
-    assert check.check("google.com") is True
-    assert check.check("instagram.com") is False
+@pytest.mark.asyncio
+async def test_check():
+    domain_checker = DomainChecker()
+
+    google_results = await domain_checker.acheck("google.com")
+    instagram_results = await domain_checker.acheck("instagram.com")
+
+    assert google_results[0] == "google.com"
+    assert google_results[1] is True
+
+    assert instagram_results[0] == "instagram.com"
+    assert instagram_results[1] is False
 
     with pytest.raises(dns.resolver.NoAnswer):
-        check.check("")
+        await domain_checker.acheck("")

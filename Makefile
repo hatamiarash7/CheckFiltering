@@ -11,7 +11,7 @@ lock: ## Update poetry.lock
 	poetry lock
 
 run: ## Run project
-	poetry run katran-master
+	poetry run check-filter
 
 build: clean ## Build package
 	poetry build

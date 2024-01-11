@@ -17,11 +17,11 @@ def test_cli_callbacks():
 def test_cli_commands(tmp_path):
     result = runner.invoke(cli.app, ["domain", "example.com"])
     assert result.exit_code == 0
-    assert "The `example.com` is free in Iran 😃" in result.stdout
+    assert "│ example.com │ Free   │" in result.stdout
 
     result = runner.invoke(cli.app, ["domain", "twitter.com"])
     assert result.exit_code == 0
-    assert "The `twitter.com` is blocked in Iran ❌" in result.stdout
+    assert "│ twitter.com │ Blocked ❌ │" in result.stdout
 
     result = runner.invoke(cli.app, ["domains", "example.com,twitter.com"])
     assert result.exit_code == 0
