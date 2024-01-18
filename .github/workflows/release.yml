@@ -40,7 +40,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Cache Poetry
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.local
           key: poetry-1.5-0
@@ -54,7 +54,7 @@ jobs:
 
       - name: Cache dependencies
         id: cache-deps
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: pydeps-${{ hashFiles('**/poetry.lock') }}
