@@ -28,12 +28,12 @@ dnspython = "^2.4.0"
 validators = ">=0.21,<0.23"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^7"
+pytest = "^8.0.0"
 pytest-asyncio = "^0.23.3"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.0.0"
-pytest = "^7"
+pytest = "^8.0.0"
 pytest-asyncio = "^0.23.3"
 
 [tool.poetry.scripts]
