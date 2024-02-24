@@ -1,4 +1,5 @@
 """This module provides the CheckFilter CLI."""
+
 import asyncio
 
 from typing import Optional
@@ -10,20 +11,15 @@ from check_filter import (
     __version__,
     __description__,
     __epilog__,
-    utils
-)
+    utils,
+)  # noqa E501
 
-app = typer.Typer(
-    help=__description__,
-    rich_markup_mode="rich"
-)
+app = typer.Typer(help=__description__, rich_markup_mode="rich")
 
 
 def _version_callback(value: bool) -> None:
     if value:
-        p(
-            f"{__app_name__} [bold cyan]v{__version__}[/bold cyan] :boom:"
-        )
+        p(f"{__app_name__} [bold cyan]v{__version__}[/bold cyan] :boom:")
         raise typer.Exit()
 
 
@@ -52,9 +48,7 @@ def domains(domains: str) -> None:
     """
     p("[yellow]Checking domains ...[/yellow]")
     domains = domains.split(",")
-    domain_validity_checks = [
-        utils.validate_domain(domain) for domain in domains
-    ]
+    domain_validity_checks = [utils.validate_domain(domain) for domain in domains]
     if not all(domain_validity_checks):
         raise typer.Exit()
 
@@ -70,12 +64,10 @@ def file(path: str):
         path (str): File path of domains
     """
     p("[yellow]Checking domains ...[/yellow]")
-    with open(file=path, encoding="utf-8", mode='r') as file:
+    with open(file=path, encoding="utf-8", mode="r") as file:
         domains = [domain.strip() for domain in file]
 
-    domain_validity_checks = [
-        utils.validate_domain(domain) for domain in domains
-    ]
+    domain_validity_checks = [utils.validate_domain(domain) for domain in domains]
     if not all(domain_validity_checks):
         raise typer.Exit()
 
@@ -84,14 +76,16 @@ def file(path: str):
 
 @app.callback()
 def main(
-        version: Optional[bool] = typer.Option(  # pylint: disable=unused-argument
-            None,
-            "--version",
-            "-v",
-            help="Show the application's version.",
-            callback=_version_callback,
-            is_eager=True,
-        )
+    version: Optional[
+        bool
+    ] = typer.Option(  # pylint: disable=unused-argument # noqa: F841
+        None,
+        "--version",
+        "-v",
+        help="Show the application's version.",
+        callback=_version_callback,
+        is_eager=True,
+    )
 ) -> None:
     """It's the version printer for CLI"""
     return

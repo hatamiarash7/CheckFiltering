@@ -1,9 +1,9 @@
 """Utils module"""
+
 import asyncio
 
 import validators
 from rich import print as p
-from rich.console import Console
 from rich.live import Live
 from rich.table import Table
 
@@ -41,14 +41,17 @@ async def print_result(domains: list) -> None:
 
     with Live(table, auto_refresh=False) as live_table:
         for d in domains:
-            tasks.add(asyncio.create_task(
-                domain_checker.acheck(d),
-                name=f"domain-check-{d}",
-            ))
+            tasks.add(
+                asyncio.create_task(
+                    domain_checker.acheck(d),
+                    name=f"domain-check-{d}",
+                )
+            )
 
         for future in asyncio.as_completed(tasks):
             domain, status = await future
             table.add_row(
                 f"[red]{domain}[/red]" if not status else domain,
-                "[green]Free[/green]" if status else "[red]Blocked[/red] :x:")
+                "[green]Free[/green]" if status else "[red]Blocked[/red] :x:",
+            )
             live_table.refresh()
