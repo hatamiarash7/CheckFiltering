@@ -1,15 +1,16 @@
 from typer.testing import CliRunner
-from check_filter import cli, __app_name__, __version__
+
+from check_filter import __app_name__, __version__, cli
 
 runner = CliRunner()
 
 
 def test_cli_callbacks():
-    result = runner.invoke(cli.app, ["-v",])
+    result = runner.invoke(cli.app, ["-v"])
     assert result.exit_code == 0
     assert f"{__app_name__} v{__version__} 💥" in result.stdout
 
-    result = runner.invoke(cli.app, ["--version",])
+    result = runner.invoke(cli.app, ["--version"])
     assert result.exit_code == 0
     assert f"{__app_name__} v{__version__} 💥" in result.stdout
 

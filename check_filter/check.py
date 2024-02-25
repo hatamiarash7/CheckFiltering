@@ -1,6 +1,7 @@
 """It's the checker module for filtering status"""
 
 import os
+
 import dns.asyncresolver
 
 

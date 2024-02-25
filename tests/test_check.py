@@ -1,5 +1,6 @@
-import pytest
 import dns
+import pytest
+
 from check_filter import DomainChecker
 
 

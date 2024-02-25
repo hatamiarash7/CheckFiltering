@@ -6,4 +6,4 @@ __version__ = "2.0.3"
 __author__ = "Arash Hatami <info@arash-hatami.ir>"
 __epilog__ = "Made with :heart:  in [green]Iran[/green]"
 
-from .check import DomainChecker
+from .check import DomainChecker  # noqa
