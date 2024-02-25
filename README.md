@@ -6,13 +6,15 @@ Check URLs that filtered ( or not ) in Iran
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 
 ## Install
 
 ```bash
 pip install check-filter
 ```
+
+You can also download wheel package from [release](https://github.com/hatamiarash7/CheckFiltering/releases/latest) page.
 
 ## Usage
 

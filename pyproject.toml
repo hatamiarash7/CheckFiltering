@@ -3,10 +3,9 @@ authors = ["Arash Hatami <hatamiarash7@gmail.com>"]
 classifiers = [
   "Topic :: Software Development",
   "Topic :: Software Development :: Libraries",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
   "Development Status :: 5 - Production/Stable",
@@ -19,7 +18,7 @@ name = "check-filter"
 packages = [{include = "check_filter"}]
 readme = "README.md"
 repository = "https://github.com/hatamiarash7/CheckFiltering"
-version = "2.3.3"
+version = "2.3.4"
 
 [tool.poetry.dependencies]
 dnspython = "^2.4.0"
