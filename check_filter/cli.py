@@ -6,8 +6,13 @@ from typing import Optional
 import typer
 from rich import print as p
 
-from check_filter import (__app_name__, __description__,  # noqa E501
-                          __epilog__, __version__, utils)
+from check_filter import (
+    __app_name__,
+    __description__,  # noqa E501
+    __epilog__,
+    __version__,
+    utils,
+)
 
 app = typer.Typer(help=__description__, rich_markup_mode="rich")
 
