@@ -1,30 +1,30 @@
 [tool.poetry]
-name = "check-filter"
-version = "2.0.3"
-license = "MIT"
-description = "Check URLs that filtered ( or not ) in Iran."
 authors = ["Arash Hatami <hatamiarash7@gmail.com>"]
-readme = "README.md"
-homepage = "https://arash-hatami.ir"
-repository = "https://github.com/hatamiarash7/CheckFiltering"
-keywords = ["internet", "censorship", "filtering"]
 classifiers = [
-    "Topic :: Software Development",
-    "Topic :: Software Development :: Libraries",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Development Status :: 5 - Production/Stable"
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Libraries",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Development Status :: 5 - Production/Stable",
 ]
+description = "Check URLs that filtered ( or not ) in Iran."
+homepage = "https://arash-hatami.ir"
+keywords = ["internet", "censorship", "filtering"]
+license = "MIT"
+name = "check-filter"
 packages = [{include = "check_filter"}]
+readme = "README.md"
+repository = "https://github.com/hatamiarash7/CheckFiltering"
+version = "2.0.3"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-typer = {extras = ["all"], version = "^0.9.0"}
 dnspython = "^2.4.0"
+python = "^3.10"
+typer = {extras = ["all"], version = "^0.9.0"}
 validators = ">=0.21,<0.23"
 
 [tool.poetry.group.test.dependencies]
@@ -43,9 +43,9 @@ check-filter = "check_filter.cli:app"
 "Bug Tracker" = "https://github.com/hatamiarash7/CheckFiltering/issues"
 
 [tool.pytest.ini_options]
-asyncio_mode="auto"
+asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0"]
