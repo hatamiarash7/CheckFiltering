@@ -23,11 +23,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@v4.1.1
 
       - name: Get version
         run: |
@@ -43,12 +43,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local
-          key: poetry-1.5-0
+          key: poetry-2.0.3
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
-          version: "1.5.0"
+          version: "2.0.3"
           virtualenvs-create: true
           virtualenvs-in-project: true
 
