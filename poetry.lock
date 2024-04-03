@@ -398,16 +398,16 @@ files = [
 
 [[package]]
 name = "validators"
-version = "0.24.0"
+version = "0.27.0"
 description = "Python Data Validation for Humans™"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "validators-0.24.0-py3-none-any.whl", hash = "sha256:4a99eb368747e60900bae947418eb21e230ff4ff5e7b7944b9308c456d86da32"},
-    {file = "validators-0.24.0.tar.gz", hash = "sha256:cd23defb36de42d14e7559cf0757f761bb46b10d9de2998e6ef805f769d859e3"},
+    {file = "validators-0.27.0-py3-none-any.whl", hash = "sha256:bc0d93d874a363bde9e61b7e31dd274fef168ec057ecb8118edc96c161a89285"},
+    {file = "validators-0.27.0.tar.gz", hash = "sha256:4a70757730619a2c0788aa3c60ba1680372173237c445571586cdef02e37223b"},
 ]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "1f1a9f77dfa1ff450cf6326bca186b599fa2540db8dc3c9072e05a6f51b04fd4"
+content-hash = "dfcee7f9688decef632c2621ed0c31f32367f79ba5d53aefa10a83efdcbc9d1b"
