@@ -365,16 +365,19 @@ files = [
 
 [[package]]
 name = "validators"
-version = "0.28.3"
+version = "0.29.0"
 description = "Python Data Validation for Humans™"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "validators-0.28.3-py3-none-any.whl", hash = "sha256:53cafa854f13850156259d9cc479b864ee901f6a96e6b109e6fc33f98f37d99f"},
-    {file = "validators-0.28.3.tar.gz", hash = "sha256:c6c79840bcde9ba77b19f6218f7738188115e27830cbaff43264bc4ed24c429d"},
+    {file = "validators-0.29.0-py3-none-any.whl", hash = "sha256:31a8285ca8889347babad77cc541f0b88e95b30553ca5f69b1d3ae4351587e3e"},
+    {file = "validators-0.29.0.tar.gz", hash = "sha256:7c8c599ea8128a6425ecb3f0da9ee10dd22b3d41b2f89560383761abf39de4df"},
 ]
+
+[package.extras]
+crypto-eth-addresses = ["eth-hash[pycryptodome] (>=0.7.0)"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "19f15aa54c6781fb544c9e8e5770a80e25e3c47a0627e2f2ee5079d672443a43"
+content-hash = "5182f167290a48c4403f8a89e269412dd1abbc623cd59c57e6f3ccae57bbb7de"
