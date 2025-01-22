@@ -105,7 +105,7 @@ jobs:
             ./dist/check_filter-${{ env.APP_VERSION }}.tar.gz
 
       - name: Publish - PyPi
-        uses: JRubics/poetry-publish@v2.0
+        uses: JRubics/poetry-publish@v2.1
         if: ${{ matrix.python-version == '3.10' }}
         with:
           pypi_token: ${{ secrets.PYPI_TOKEN }}
