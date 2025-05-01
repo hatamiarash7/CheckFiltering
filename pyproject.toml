@@ -24,7 +24,7 @@ version = "2.3.4"
 dnspython = "^2.4.0"
 python = "^3.10"
 typer = {extras = ["all"], version = ">=0.15,<0.16"}
-validators = ">=0.34,<0.35"
+validators = ">=0.35,<0.36"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
