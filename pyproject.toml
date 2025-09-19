@@ -23,7 +23,7 @@ version = "2.3.4"
 [tool.poetry.dependencies]
 dnspython = "^2.4.0"
 python = "^3.10"
-typer = {extras = ["all"], version = ">=0.17,<0.18"}
+typer = {extras = ["all"], version = ">=0.18,<0.19"}
 validators = ">=0.35,<0.36"
 
 [tool.poetry.group.test.dependencies]
