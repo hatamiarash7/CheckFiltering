@@ -8,7 +8,7 @@ on:
 jobs:
   init:
     name: Initialize
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Cancel previous workflow
         uses: styfle/cancel-workflow-action@0.12.1
@@ -17,7 +17,7 @@ jobs:
 
   linting:
     name: Linting
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4.3.0
@@ -54,7 +54,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4.3.0
