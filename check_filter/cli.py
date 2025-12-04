@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich import print as rich_print
@@ -38,7 +38,9 @@ app = typer.Typer(
 def _version_callback(value: bool) -> None:
     """Display version information and exit."""
     if value:
-        rich_print(f"{__app_name__} [bold cyan]v{__version__}[/bold cyan] :boom:")  # noqa: E501
+        rich_print(
+            f"{__app_name__} [bold cyan]v{__version__}[/bold cyan] :boom:"
+        )
         raise typer.Exit()
 
 
@@ -133,7 +135,9 @@ def file(
         check-filter file domains.txt
         check-filter file /path/to/my_domains.txt
     """
-    rich_print(f"[yellow]Reading domains from [italic]{path}[/italic] ...[/yellow]")  # noqa: E501
+    rich_print(
+        f"[yellow]Reading domains from [italic]{path}[/italic] ...[/yellow]"
+    )
 
     try:
         domain_names = utils.read_domains_from_file(str(path))
@@ -162,8 +166,8 @@ def file(
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    version: Annotated[
-        Optional[bool],
+    _: Annotated[
+        bool | None,
         typer.Option(
             "--version",
             "-v",

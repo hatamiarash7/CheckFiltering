@@ -7,14 +7,14 @@ Iranian ISPs for censorship.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING
 
-import dns.asyncresolver
-import dns.resolver
+from dns import asyncresolver, exception, resolver
 
 if TYPE_CHECKING:
     from collections.abc import Set
@@ -115,7 +115,7 @@ class DomainChecker:
             frozenset(blocked_ips) if blocked_ips else DEFAULT_BLOCKED_IPS
         )
 
-        self.resolver = dns.asyncresolver.Resolver(configure=False)
+        self.resolver = asyncresolver.Resolver(configure=False)
 
         if nameservers:
             self.resolver.nameservers = nameservers
@@ -144,7 +144,7 @@ class DomainChecker:
             dns.resolver.NoAnswer: If the domain exists but has no A record.
         """
         if not domain or not domain.strip():
-            raise dns.resolver.NoAnswer("Domain can't be empty or whitespace only")  # noqa: E501
+            raise resolver.NoAnswer("Domain can't be empty or whitespace only")
 
         domain = domain.strip().lower()
         logger.debug("Checking domain: %s", domain)
@@ -163,7 +163,7 @@ class DomainChecker:
                 ips=ip_list,
             )
 
-        except dns.resolver.NXDOMAIN:
+        except resolver.NXDOMAIN:
             logger.debug("Domain %s does not exist (NXDOMAIN)", domain)
             return CheckResult(
                 domain=domain,
@@ -171,7 +171,7 @@ class DomainChecker:
                 error="Domain does not exist",
             )
 
-        except dns.resolver.NoNameservers as e:
+        except resolver.NoNameservers as e:
             logger.error("No nameservers available for %s: %s", domain, e)
             return CheckResult(
                 domain=domain,
@@ -179,7 +179,7 @@ class DomainChecker:
                 error=f"No nameservers available: {e}",
             )
 
-        except dns.exception.Timeout as e:
+        except exception.Timeout as e:
             logger.warning("DNS timeout for %s: %s", domain, e)
             return CheckResult(
                 domain=domain,
@@ -196,7 +196,5 @@ class DomainChecker:
         Returns:
             List of CheckResult objects for each domain.
         """
-        import asyncio
-
         tasks = [self.acheck(domain) for domain in domains]
         return await asyncio.gather(*tasks, return_exceptions=False)
