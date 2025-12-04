@@ -3,22 +3,31 @@ authors = ["Arash Hatami <hatamiarash7@gmail.com>"]
 classifiers = [
   "Topic :: Software Development",
   "Topic :: Software Development :: Libraries",
+  "Topic :: Internet :: Name Service (DNS)",
+  "Topic :: Security",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
   "License :: OSI Approved :: MIT License",
   "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "Operating System :: OS Independent",
+  "Typing :: Typed",
 ]
-description = "Check URLs that filtered ( or not ) in Iran."
+description = "Check URLs that filtered (or not) in Iran."
 homepage = "https://arash-hatami.ir"
-keywords = ["internet", "censorship", "filtering"]
+keywords = ["internet", "censorship", "filtering", "dns", "iran", "blocked"]
 license = "MIT"
 name = "check-filter"
 packages = [{include = "check_filter"}]
 readme = "README.md"
 repository = "https://github.com/hatamiarash7/CheckFiltering"
-version = "2.3.4"
+version = "2.5.0"
 
 [tool.poetry.dependencies]
 dnspython = "^2.4.0"
@@ -29,21 +38,133 @@ validators = ">=0.35,<0.36"
 [tool.poetry.group.test.dependencies]
 pytest = "^9.0.0"
 pytest-asyncio = "^1.0.0"
+pytest-cov = "^6.0.0"
 
 [tool.poetry.group.dev.dependencies]
+black = "^25.0.0"
+isort = "^6.0.0"
+mypy = "^1.14.0"
+pre-commit = "^4.0.0"
 pylint = "^4.0.0"
 pytest = "^9.0.0"
 pytest-asyncio = "^1.0.0"
+pytest-cov = "^6.0.0"
+ruff = "^0.8.0"
 
 [tool.poetry.scripts]
 check-filter = "check_filter.cli:app"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/hatamiarash7/CheckFiltering/issues"
+"Changelog" = "https://github.com/hatamiarash7/CheckFiltering/releases"
 
 [tool.pytest.ini_options]
+addopts = [
+  "-v",
+  "--tb=short",
+  "--strict-markers",
+]
 asyncio_mode = "auto"
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "integration: marks tests as integration tests",
+]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+omit = ["tests/*"]
+source = ["check_filter"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
+fail_under = 80
+show_missing = true
+
+[tool.black]
+exclude = '''
+/(
+    \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+)/
+'''
+include = '\.pyi?$'
+line-length = 88
+target-version = ["py310", "py311", "py312", "py313"]
+
+[tool.isort]
+known_first_party = ["check_filter"]
+line_length = 88
+profile = "black"
+skip_gitignore = true
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+python_version = "3.10"
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = [
+  "validators",
+  "dns.*",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+ignore = [
+  "E501", # line too long (handled by black)
+  "B008", # do not perform function calls in argument defaults
+]
+select = [
+  "E", # pycodestyle errors
+  "W", # pycodestyle warnings
+  "F", # Pyflakes
+  "I", # isort
+  "C4", # flake8-comprehensions
+  "B", # flake8-bugbear
+  "UP", # pyupgrade
+  "ARG", # flake8-unused-arguments
+  "SIM", # flake8-simplify
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG"]
+
+[tool.pylint.messages_control]
+disable = [
+  "redefined-outer-name",
+  "too-few-public-methods",
+  "missing-module-docstring",
+]
+
+[tool.pylint.format]
+max-line-length = 88
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

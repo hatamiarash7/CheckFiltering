@@ -1,2 +1,64 @@
+[MAIN]
+# Use multiple processes to speed up Pylint
+jobs = 0
+
+# Pickle collected data for later comparisons
+persistent = yes
+
+# Minimum supported Python version
+py-version = 3.10
+
 [MESSAGES CONTROL]
-disable=redefined-outer-name
+disable =
+    redefined-outer-name,
+    too-few-public-methods,
+    missing-module-docstring,
+    line-too-long,
+    duplicate-code
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length = 88
+
+# Expected format of line ending
+expected-line-ending-format = LF
+
+[BASIC]
+# Good variable names
+good-names = i, j, k, ex, _, f, e, d, ip
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args = 7
+
+# Maximum number of locals for function / method body
+max-locals = 15
+
+# Maximum number of return / yield for function / method body
+max-returns = 6
+
+# Maximum number of branch for function / method body
+max-branches = 12
+
+# Maximum number of statements in function / method body
+max-statements = 50
+
+# Maximum number of attributes for a class
+max-attributes = 10
+
+[SIMILARITIES]
+# Minimum lines number of a similarity
+min-similarity-lines = 6
+
+# Ignore comments when computing similarities
+ignore-comments = yes
+
+# Ignore docstrings when computing similarities
+ignore-docstrings = yes
+
+# Ignore imports when computing similarities
+ignore-imports = yes
+
+[TYPECHECK]
+# List of module names for which member attributes should not be checked
+ignored-modules = dns.resolver, dns.asyncresolver, dns.exception
