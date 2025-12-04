@@ -38,9 +38,7 @@ app = typer.Typer(
 def _version_callback(value: bool) -> None:
     """Display version information and exit."""
     if value:
-        rich_print(
-            f"{__app_name__} [bold cyan]v{__version__}[/bold cyan] :boom:"
-        )
+        rich_print(f"{__app_name__} [bold cyan]v{__version__}[/bold cyan] :boom:")
         raise typer.Exit()
 
 
@@ -135,9 +133,7 @@ def file(
         check-filter file domains.txt
         check-filter file /path/to/my_domains.txt
     """
-    rich_print(
-        f"[yellow]Reading domains from [italic]{path}[/italic] ...[/yellow]"
-    )
+    rich_print(f"[yellow]Reading domains from [italic]{path}[/italic] ...[/yellow]")
 
     try:
         domain_names = utils.read_domains_from_file(str(path))
