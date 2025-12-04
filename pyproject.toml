@@ -28,12 +28,12 @@ validators = ">=0.35,<0.36"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^9.0.0"
-pytest-asyncio = "^0.26.0"
+pytest-asyncio = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^4.0.0"
 pytest = "^9.0.0"
-pytest-asyncio = "^0.26.0"
+pytest-asyncio = "^1.0.0"
 
 [tool.poetry.scripts]
 check-filter = "check_filter.cli:app"
