@@ -12,7 +12,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from dns import asyncresolver, exception, resolver
 
@@ -57,7 +57,7 @@ class CheckResult:
         """Check if the domain is free (not blocked)."""
         return self.status == FilterStatus.FREE
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         """Allow tuple unpacking for backward compatibility."""
         yield self.domain
         yield self.is_free
