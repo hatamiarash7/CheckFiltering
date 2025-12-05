@@ -38,7 +38,7 @@ validators = ">=0.35,<0.36"
 [tool.poetry.group.test.dependencies]
 pytest = "^9.0.0"
 pytest-asyncio = "^1.0.0"
-pytest-cov = "^6.0.0"
+pytest-cov = "^7.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.0.0"
@@ -48,7 +48,7 @@ pre-commit = "^4.0.0"
 pylint = "^4.0.0"
 pytest = "^9.0.0"
 pytest-asyncio = "^1.0.0"
-pytest-cov = "^6.0.0"
+pytest-cov = "^7.0.0"
 ruff = "^0.14.0"
 
 [tool.poetry.scripts]
