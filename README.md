@@ -2,7 +2,6 @@
 
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![GitHub release](https://img.shields.io/github/release/hatamiarash7/CheckFiltering.svg)](https://GitHub.com/hatamiarash7/CheckFiltering/releases/)
-[![CI](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/ci.yml/badge.svg)](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/ci.yml)
 [![Release](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/release.yml/badge.svg)](https://github.com/hatamiarash7/CheckFiltering/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/hatamiarash7/CheckFiltering/branch/master/graph/badge.svg)](https://codecov.io/gh/hatamiarash7/CheckFiltering)
 ![GitHub](https://img.shields.io/github/license/hatamiarash7/CheckFiltering)
