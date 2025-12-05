@@ -20,7 +20,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -32,9 +32,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-lint-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+          key: venv-lint-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            venv-lint-${{ runner.os }}-3.12-
+            venv-lint-${{ runner.os }}-3.13-
 
       - name: Install dependencies
         run: poetry install --with dev
@@ -61,7 +61,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -73,9 +73,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-type-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+          key: venv-type-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            venv-type-${{ runner.os }}-3.12-
+            venv-type-${{ runner.os }}-3.13-
 
       - name: Install dependencies
         run: poetry install --with dev
@@ -89,7 +89,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13"]
     env:
       CI: "true"
     steps:
@@ -118,16 +118,28 @@ jobs:
       - name: Install dependencies
         run: poetry install --with test
 
-      - name: Run tests with coverage
-        run: poetry run pytest --cov=check_filter --cov-report=xml --cov-report=term-missing
+      - name: Run tests
+        run: poetry run pytest --cov=check_filter --cov-report=xml --cov-report=term-missing --junitxml=junit.xml -o junit_family=legacy
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.12'
+        if: ${{ !cancelled() && matrix.python-version == '3.13' }}
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
           verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() && matrix.python-version == '3.13' }}
+        uses: codecov/test-results-action@v1
+        with:
+          files: ./junit.xml
+          fail_ci_if_error: false
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   release:
     name: Release
@@ -137,7 +149,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -180,7 +192,7 @@ jobs:
 
       - name: Publish - Github
         uses: softprops/action-gh-release@v2
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.13'
         with:
           fail_on_unmatched_files: true
           files: |
@@ -189,7 +201,7 @@ jobs:
 
       - name: Publish - PyPi
         uses: JRubics/poetry-publish@v2.1
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.13'
         with:
           pypi_token: ${{ secrets.PYPI_TOKEN }}
           poetry_install_options: "--without dev"
