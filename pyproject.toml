@@ -41,7 +41,7 @@ pytest-asyncio = "^1.0.0"
 pytest-cov = "^7.0.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^25.0.0"
+black = "^26.0.0"
 isort = "^7.0.0"
 mypy = "^1.14.0"
 pre-commit = "^4.0.0"
