@@ -20,7 +20,8 @@ This tool checks if a domain is blocked by Iranian ISPs by:
 2. Comparing the resolved IP addresses against known blocking IPs used by Iranian ISPs
 3. Reporting whether the domain is blocked or accessible
 
-**Note:** This tool can only detect DNS-based blocking and does not have the power to detect other types of filtering or network disorders.
+> [!warning]
+> This tool can only detect DNS-based blocking and does not have the power to detect other types of filtering or network disorders.
 
 ## ✨ Features
 
