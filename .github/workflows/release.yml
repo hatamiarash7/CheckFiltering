@@ -191,7 +191,7 @@ jobs:
         run: poetry build
 
       - name: Publish - Github
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: matrix.python-version == '3.13'
         with:
           fail_on_unmatched_files: true
