@@ -94,7 +94,7 @@ class DomainChecker:
         google.com: free
     """
 
-    headers = ["Address", "Status"]
+    headers: list[str] = ["Address", "Status"]
 
     def __init__(
         self,

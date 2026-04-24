@@ -15,13 +15,7 @@ import typer
 from rich import print as rich_print
 from rich.console import Console
 
-from check_filter import (
-    __app_name__,
-    __description__,
-    __epilog__,
-    __version__,
-    utils,
-)
+from check_filter import __app_name__, __description__, __epilog__, __version__, utils
 
 # Initialize console for error output
 console = Console(stderr=True)
@@ -96,7 +90,7 @@ def domains(
     rich_print("[yellow]Checking domains ...[/yellow]")
 
     # Parse and clean domain list
-    domain_names = [d.strip() for d in domain_list.split(",") if d.strip()]
+    domain_names: list[str] = [d.strip() for d in domain_list.split(",") if d.strip()]
 
     if not domain_names:
         console.print("[red]No valid domains provided![/red]")
@@ -136,7 +130,7 @@ def file(
     rich_print(f"[yellow]Reading domains from [italic]{path}[/italic] ...[/yellow]")
 
     try:
-        domain_names = utils.read_domains_from_file(str(path))
+        domain_names: list[str] = utils.read_domains_from_file(str(path))
     except FileNotFoundError:
         console.print(f"[red]File not found: {path}[/red]")
         raise typer.Exit(code=1) from None
