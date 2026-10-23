@@ -5,203 +5,58 @@ on:
     types: [published]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-26.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.15"
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Cache dependencies
-        uses: actions/cache@v6
-        with:
-          path: .venv
-          key: venv-lint-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            venv-lint-${{ runner.os }}-3.13-
-
-      - name: Install dependencies
-        run: poetry install --with dev
-
-      - name: Check formatting with Black
-        run: poetry run black --check check_filter tests
-
-      - name: Check import sorting with isort
-        run: poetry run isort --check-only check_filter tests
-
-      - name: Lint with Ruff
-        run: poetry run ruff check check_filter tests
-
-      - name: Lint with Pylint
-        run: poetry run pylint check_filter
-
-  type-check:
-    name: Type Check
-    runs-on: ubuntu-26.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.15"
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Cache dependencies
-        uses: actions/cache@v6
-        with:
-          path: .venv
-          key: venv-type-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            venv-type-${{ runner.os }}-3.13-
-
-      - name: Install dependencies
-        run: poetry install --with dev
-
-      - name: Type check with mypy
-        run: poetry run mypy check_filter
-
-  test:
-    name: Test (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-26.04
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12", "3.13"]
-    env:
-      CI: "true"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Cache dependencies
-        uses: actions/cache@v6
-        with:
-          path: .venv
-          key: venv-test-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            venv-test-${{ runner.os }}-${{ matrix.python-version }}-
-
-      - name: Install dependencies
-        run: poetry install --with test
-
-      - name: Run tests
-        run: poetry run pytest --cov=check_filter --cov-report=xml --cov-report=term-missing --junitxml=junit.xml -o junit_family=legacy
-
-      - name: Upload coverage to Codecov
-        if: ${{ !cancelled() && matrix.python-version == '3.13' }}
-        uses: codecov/codecov-action@v7
-        with:
-          files: ./coverage.xml
-          fail_ci_if_error: false
-          verbose: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() && matrix.python-version == '3.13' }}
-        uses: codecov/test-results-action@v1
-        with:
-          files: ./junit.xml
-          fail_ci_if_error: false
-          verbose: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  checks:
+    uses: ./.github/workflows/checks.yml
 
   release:
-    name: Release
-    needs: ["lint", "type-check", "test"]
+    name: Build and publish
+    needs: checks
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12", "3.13"]
-    runs-on: ubuntu-26.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-
-      - name: Get version
-        run: |
-          APP_VERSION=${GITHUB_REF##*/}
-          echo "APP_VERSION=${APP_VERSION:1}" >> $GITHUB_ENV
-
-      - name: Setup Python
-        uses: actions/setup-python@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-
+          python-version: "3.13"
       - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Cache dependencies
-        id: cache-deps
-        uses: actions/cache@v6
-        with:
-          path: .venv
-          key: venv-test-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            venv-test-${{ runner.os }}-${{ matrix.python-version }}-
-
-      - name: Install dependencies
-        if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
-
-      - name: Install project
-        run: poetry install --no-interaction
-
-      - name: Build
+        run: python -m pip install poetry==2.2.1
+      - name: Validate release tag
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          expected="v$(poetry version --short)"
+          if [ "$RELEASE_TAG" != "$expected" ]; then
+            echo "Release tag must match the package version: $expected" >&2
+            exit 1
+          fi
+      - name: Build distributions
         run: poetry build
-
-      - name: Publish - Github
-        uses: softprops/action-gh-release@v3
-        if: matrix.python-version == '3.13'
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: distributions
+          path: dist/*
+          if-no-files-found: error
+      - name: Attach distributions to GitHub release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
           files: |
-            ./dist/check_filter-${{ env.APP_VERSION }}-py3-none-any.whl
-            ./dist/check_filter-${{ env.APP_VERSION }}.tar.gz
-
-      - name: Publish - PyPi
-        uses: JRubics/poetry-publish@v2.1
-        if: matrix.python-version == '3.13'
-        with:
-          pypi_token: ${{ secrets.PYPI_TOKEN }}
-          poetry_install_options: "--without dev"
+            dist/*.whl
+            dist/*.tar.gz
+      - name: Publish to PyPI
+        if: github.event_name == 'release'
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+        run: poetry publish --no-interaction

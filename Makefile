@@ -62,6 +62,10 @@ test-fast: ## Run tests excluding slow and integration tests
 	@echo "$(BLUE)Running fast tests...$(RESET)"
 	$(POETRY) run pytest -m "not slow and not integration"
 
+.PHONY: test-cov-fast
+test-cov-fast: ## Run offline tests with branch coverage reports
+	$(POETRY) run pytest -m "not slow and not integration" --cov=check_filter --cov-report=html --cov-report=term-missing
+
 .PHONY: lint
 lint: ## Run Ruff and Pylint
 	@echo "$(BLUE)Running linters...$(RESET)"
@@ -99,14 +103,21 @@ check: ## Check formatting, lint, types, and all tests in order
 	$(MAKE) test
 	@echo "$(GREEN)All checks passed!$(RESET)"
 
-# These optional helpers require a local .pre-commit-config.yaml.
+.PHONY: check-fast
+check-fast: ## Check formatting, lint, types, and offline tests in order
+	$(MAKE) format-check
+	$(MAKE) lint
+	$(MAKE) type-check
+	$(MAKE) test-fast
+
+# Optional hooks use the same Poetry-managed tools as the Makefile.
 .PHONY: pre-commit
-pre-commit: ## Run all hooks (requires local configuration)
+pre-commit: ## Run all configured hooks
 	@echo "$(BLUE)Running pre-commit hooks...$(RESET)"
 	$(POETRY) run pre-commit run --all-files
 
 .PHONY: pre-commit-install
-pre-commit-install: ## Install hooks (requires local configuration)
+pre-commit-install: ## Install the optional Git hooks
 	@echo "$(BLUE)Installing pre-commit hooks...$(RESET)"
 	$(POETRY) run pre-commit install
 

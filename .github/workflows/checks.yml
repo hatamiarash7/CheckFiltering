@@ -1,0 +1,54 @@
+name: Checks
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Format, lint, and types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install Poetry
+        run: python -m pip install poetry==2.2.1
+      - name: Install dependencies
+        run: poetry install --with dev,test --no-interaction
+      - run: make format-check lint type-check
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        run: python -m pip install poetry==2.2.1
+      - name: Install dependencies
+        run: poetry install --only main,test --no-interaction
+      - name: Check package metadata
+        run: poetry check --lock
+      - name: Run offline tests with branch coverage
+        run: poetry run pytest -m "not slow and not integration" --cov=check_filter --cov-report=xml --cov-report=term-missing --junitxml=junit.xml
+      - name: Upload coverage
+        if: github.event_name == 'push' && matrix.python-version == '3.14'
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
