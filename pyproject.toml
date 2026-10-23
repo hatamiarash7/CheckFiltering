@@ -50,6 +50,7 @@ pytest = "^9.0.0"
 pytest-asyncio = "^1.0.0"
 pytest-cov = "^7.0.0"
 ruff = "^0.17.0"
+flake8-pyproject = "^1.2.4"
 
 [tool.poetry.scripts]
 check-filter = "check_filter.cli:app"
@@ -165,6 +166,9 @@ disable = [
 
 [tool.pylint.format]
 max-line-length = 88
+
+[tool.flake8]
+ignore = ['E501']
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
