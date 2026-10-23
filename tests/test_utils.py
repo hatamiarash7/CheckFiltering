@@ -1,5 +1,6 @@
 """Tests for the utils module."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -45,6 +46,12 @@ class TestValidateDomain:
         utils.validate_domain("invalid", verbose=False)
         captured = capsys.readouterr()
         assert captured.out == ""
+
+    @pytest.mark.parametrize("domain", [None, "", "   "])
+    def test_empty_input_silent(self, domain, capsys):
+        """Silent validation also suppresses empty-input errors."""
+        assert utils.validate_domain(domain, verbose=False) is False
+        assert capsys.readouterr().out == ""
 
     def test_domain_with_spaces_stripped(self):
         """Test that domains with leading/trailing spaces are handled."""
@@ -208,6 +215,12 @@ class TestReadDomainsFromFile:
 
         assert domains == []
 
+    def test_utf8_bom_and_crlf(self, tmp_path):
+        """Accept UTF-8 files saved with a BOM and Windows line endings."""
+        path = tmp_path / "domains.txt"
+        path.write_bytes(b"\xef\xbb\xbf  # comment\r\nexample.com\r\n\r\n")
+        assert utils.read_domains_from_file(str(path)) == ["example.com"]
+
 
 class TestPrintResult:
     """Tests for print_result function."""
@@ -276,6 +289,72 @@ class TestPrintResult:
         assert len(results) == 1
         assert results[0].is_blocked is True
         mock_checker.acheck.assert_called_once_with("example.com")
+
+    @pytest.mark.parametrize("show_progress", [True, False])
+    async def test_completion_order(self, show_progress, capsys):
+        """Live and static displays return results in completion order."""
+        checker = DomainChecker()
+        second_finished = asyncio.Event()
+
+        async def check(domain):
+            if domain == "first.com":
+                await second_finished.wait()
+            else:
+                second_finished.set()
+            return CheckResult(domain, FilterStatus.FREE)
+
+        with patch.object(checker, "acheck", side_effect=check):
+            results = await utils.print_result(
+                ["first.com", "second.com"], checker, show_progress=show_progress
+            )
+        assert [result.domain for result in results] == ["second.com", "first.com"]
+        output = capsys.readouterr().out
+        assert "first.com" in output
+        assert "second.com" in output
+
+    @pytest.mark.parametrize("show_progress", [True, False])
+    @pytest.mark.parametrize("cancel", [True, False])
+    async def test_task_cleanup(self, show_progress, cancel):
+        """Await sibling cleanup before returning on failure or cancellation."""
+        checker = DomainChecker()
+        started = asyncio.Event()
+        pending = []
+
+        async def check(domain):
+            if domain == "fail.com":
+                await started.wait()
+                raise RuntimeError("failed check")
+            pending.append(asyncio.current_task())
+            started.set()
+            await asyncio.Event().wait()
+
+        with patch.object(checker, "acheck", side_effect=check):
+            parent = asyncio.create_task(
+                utils.print_result(
+                    ["pending.com"] if cancel else ["fail.com", "pending.com"],
+                    checker,
+                    show_progress=show_progress,
+                )
+            )
+            try:
+                await started.wait()
+                if cancel:
+                    parent.cancel()
+                with pytest.raises(asyncio.CancelledError if cancel else RuntimeError):
+                    await parent
+                assert all(task.done() for task in pending)
+            finally:
+                for task in pending:
+                    task.cancel()
+                await asyncio.gather(*pending, return_exceptions=True)
+
+    @pytest.mark.parametrize("show_progress", [True, False])
+    async def test_empty_input(self, show_progress):
+        """An empty display does not start checks."""
+        checker = MagicMock(spec=DomainChecker)
+        checker.acheck = AsyncMock()
+        assert await utils.print_result([], checker, show_progress) == []
+        checker.acheck.assert_not_awaited()
 
 
 class TestDomainPattern:

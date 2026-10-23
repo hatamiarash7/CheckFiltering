@@ -1,5 +1,6 @@
 """Tests for the check module."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import dns.exception
@@ -117,6 +118,27 @@ class TestDomainChecker:
         checker = DomainChecker(blocked_ips=custom_ips)
 
         assert checker.blocked_ips == frozenset(custom_ips)
+
+    def test_empty_blocked_ips(self):
+        """An explicit empty set disables blocking-IP matches."""
+        assert DomainChecker(blocked_ips=set()).blocked_ips == frozenset()
+
+    @pytest.mark.parametrize("timeout", [0, -1, float("nan"), float("inf")])
+    def test_invalid_timeout(self, timeout):
+        """Reject timeouts that cannot impose a finite positive deadline."""
+        with pytest.raises(ValueError, match="timeout"):
+            DomainChecker(timeout=timeout)
+
+    @pytest.mark.parametrize("ci_value", ["true", "false", ""])
+    def test_ci_nameserver(self, monkeypatch, ci_value):
+        """Preserve the CI-variable-presence convention."""
+        monkeypatch.setenv("CI", ci_value)
+        assert DomainChecker().resolver.nameservers == [CI_NAMESERVER]
+
+    def test_default_nameserver_without_ci(self, monkeypatch):
+        """Use the documented default outside CI."""
+        monkeypatch.delenv("CI", raising=False)
+        assert DomainChecker().resolver.nameservers == [DEFAULT_NAMESERVER]
 
     def test_custom_nameservers(self):
         """Test initialization with custom nameservers."""
@@ -264,6 +286,134 @@ class TestDomainChecker:
 
             assert len(results) == 3
             assert all(isinstance(r, CheckResult) for r in results)
+
+    @pytest.mark.parametrize("answer", [[], None])
+    async def test_missing_a_record_is_unknown(self, answer):
+        """A missing A record is inconclusive, not free or a batch failure."""
+        checker = DomainChecker()
+        with patch.object(
+            checker.resolver, "resolve", new_callable=AsyncMock
+        ) as resolve:
+            if answer is None:
+                resolve.side_effect = dns.resolver.NoAnswer()
+            else:
+                resolve.return_value = answer
+            result = await checker.acheck("ipv6-only.example.com")
+
+        assert result.status is FilterStatus.UNKNOWN
+        assert result.ips == frozenset()
+        assert "A record" in result.error
+
+    async def test_mixed_answer_is_blocked(self):
+        """One known blocking IP suffices, even alongside ordinary answers."""
+        checker = DomainChecker()
+        answer = [MagicMock(address=ip) for ip in ["1.2.3.4", "10.10.34.34", "1.2.3.4"]]
+        with patch.object(checker.resolver, "resolve", AsyncMock(return_value=answer)):
+            result = await checker.acheck("example.com")
+        assert result.is_blocked
+        assert result.ips == frozenset({"1.2.3.4", "10.10.34.34"})
+
+    async def test_dns_exception_is_error(self):
+        """Other DNS failures do not abort the whole batch."""
+        checker = DomainChecker()
+        with patch.object(
+            checker.resolver,
+            "resolve",
+            AsyncMock(side_effect=dns.exception.FormError()),
+        ):
+            result = await checker.acheck("example.com")
+        assert result.status is FilterStatus.ERROR
+        assert result.error
+
+    async def test_acheck_many_preserves_order(self):
+        """Return input order even when later checks finish first."""
+        checker = DomainChecker()
+        second_finished = asyncio.Event()
+
+        async def check(domain):
+            if domain == "first.com":
+                await second_finished.wait()
+            else:
+                second_finished.set()
+            return CheckResult(domain, FilterStatus.FREE)
+
+        with patch.object(checker, "acheck", side_effect=check):
+            results = await checker.acheck_many(
+                ["first.com", "second.com", "second.com"]
+            )
+        assert [result.domain for result in results] == [
+            "first.com",
+            "second.com",
+            "second.com",
+        ]
+
+    async def test_acheck_many_empty(self):
+        """An empty batch makes no DNS queries."""
+        checker = DomainChecker()
+        with patch.object(checker.resolver, "resolve", AsyncMock()) as resolve:
+            assert await checker.acheck_many([]) == []
+        resolve.assert_not_awaited()
+
+    async def test_acheck_many_missing_record_does_not_abort(self):
+        """A no-answer response is an individual result in a mixed batch."""
+        checker = DomainChecker()
+        with patch.object(
+            checker.resolver,
+            "resolve",
+            AsyncMock(
+                side_effect=[dns.resolver.NoAnswer(), [MagicMock(address="1.2.3.4")]]
+            ),
+        ):
+            results = await checker.acheck_many(["no-a.com", "has-a.com"])
+        assert [result.status for result in results] == [
+            FilterStatus.UNKNOWN,
+            FilterStatus.FREE,
+        ]
+
+    async def test_acheck_many_cancellation(self):
+        """Cancellation reaches and awaits every child check."""
+        checker = DomainChecker()
+        started = asyncio.Event()
+        children = []
+
+        async def check(domain):
+            children.append(asyncio.current_task())
+            if len(children) == 2:
+                started.set()
+            await asyncio.Event().wait()
+
+        with patch.object(checker, "acheck", side_effect=check):
+            parent = asyncio.create_task(checker.acheck_many(["a.com", "b.com"]))
+            await started.wait()
+            parent.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await parent
+        assert len(children) == 2
+        assert all(task.cancelled() for task in children)
+
+    async def test_acheck_many_cleans_up_after_failure(self):
+        """Do not leave sibling checks running when one raises."""
+        checker = DomainChecker()
+        started = asyncio.Event()
+        pending = []
+
+        async def check(domain):
+            if domain == "fail.com":
+                await started.wait()
+                raise RuntimeError("failed check")
+            pending.append(asyncio.current_task())
+            started.set()
+            await asyncio.Event().wait()
+
+        with patch.object(checker, "acheck", side_effect=check):
+            try:
+                with pytest.raises(RuntimeError, match="failed check"):
+                    await checker.acheck_many(["fail.com", "pending.com"])
+                assert all(task.done() for task in pending)
+            finally:
+                for task in pending:
+                    task.cancel()
+                await asyncio.gather(*pending, return_exceptions=True)
 
 
 class TestDefaultConstants:

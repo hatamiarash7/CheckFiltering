@@ -137,7 +137,7 @@ def file(
     except PermissionError:
         console.print(f"[red]Permission denied: {path}[/red]")
         raise typer.Exit(code=1) from None
-    except Exception as e:
+    except (OSError, UnicodeError) as e:
         console.print(f"[red]Error reading file: {e}[/red]")
         raise typer.Exit(code=1) from None
 

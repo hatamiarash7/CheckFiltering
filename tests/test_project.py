@@ -1,5 +1,8 @@
 """Tests for package metadata and exports."""
 
+import re
+from pathlib import Path
+
 import check_filter
 from check_filter import (
     CheckResult,
@@ -92,10 +95,12 @@ class TestVersionConsistency:
         assert hasattr(check_filter, "__version__")
 
     def test_version_matches_pyproject(self):
-        """Test version matches pyproject.toml (informational)."""
-        # This test documents expected version
-        # Update this when releasing new versions
-        assert __version__ == "2.5.0"
+        """Compare the actual distribution version instead of a hardcoded value."""
+        pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+        poetry_metadata = pyproject.read_text(encoding="utf-8").split("\n[", 1)[0]
+        match = re.search(r'^version = "([^"]+)"$', poetry_metadata, re.MULTILINE)
+        assert match is not None
+        assert __version__ == match.group(1)
 
 
 class TestClassAvailability:

@@ -130,14 +130,14 @@ class TestDomainsCommand:
             result = runner.invoke(cli.app, ["domains", "example.com,invalid"])
 
             assert result.exit_code == 1
-            assert "invalid" in result.stdout.lower()
+            assert "invalid" in result.stderr.lower()
 
     def test_empty_domain_list(self):
         """Test with empty domain list after splitting."""
         result = runner.invoke(cli.app, ["domains", ",,,"])
 
         assert result.exit_code == 1
-        assert "No valid domains" in result.stdout
+        assert "No valid domains" in result.stderr
 
     def test_whitespace_handling(self):
         """Test that whitespace is handled in domain list."""
@@ -190,7 +190,7 @@ class TestFileCommand:
         result = runner.invoke(cli.app, ["file", str(file_path)])
 
         assert result.exit_code == 1
-        assert "No domains" in result.stdout
+        assert "No domains" in result.stderr
 
     def test_file_with_comments(self, tmp_path):
         """Test file with comment lines."""
@@ -221,6 +221,41 @@ class TestFileCommand:
 
             assert result.exit_code == 1
 
+    @pytest.mark.parametrize(
+        ("error", "message"),
+        [
+            (FileNotFoundError(), "File not found"),
+            (PermissionError(), "Permission denied"),
+            (OSError("read failed"), "Error reading file"),
+            (UnicodeError("invalid encoding"), "Error reading file"),
+        ],
+    )
+    def test_file_read_errors(self, tmp_path, error, message):
+        """Report expected I/O failures without a traceback or DNS queries."""
+        path = tmp_path / "domains.txt"
+        path.touch()
+        with (
+            patch("check_filter.cli.utils.read_domains_from_file", side_effect=error),
+            patch(
+                "check_filter.cli.utils.print_result", new_callable=AsyncMock
+            ) as check,
+        ):
+            result = runner.invoke(cli.app, ["file", str(path)])
+        assert result.exit_code == 1
+        assert message in result.stderr
+        check.assert_not_awaited()
+
+    def test_unexpected_file_error_is_not_swallowed(self, tmp_path):
+        """Programming errors should remain visible rather than become I/O errors."""
+        path = tmp_path / "domains.txt"
+        path.touch()
+        with patch(
+            "check_filter.cli.utils.read_domains_from_file",
+            side_effect=RuntimeError("unexpected failure"),
+        ):
+            result = runner.invoke(cli.app, ["file", str(path)])
+        assert isinstance(result.exception, RuntimeError)
+
 
 class TestNoArgs:
     """Tests for CLI with no arguments."""
@@ -234,6 +269,15 @@ class TestNoArgs:
         assert "domains" in result.stdout.lower()
         assert "file" in result.stdout.lower()
 
+    def test_callback_without_subcommand(self, capsys):
+        """The callback can also display help when invoked directly."""
+        import typer
+
+        command = typer.main.get_command(cli.app)
+        with typer.Context(command, info_name="check-filter") as context:
+            cli.main(context)
+        assert "Usage:" in capsys.readouterr().out
+
 
 class TestRunFunction:
     """Tests for the run() entry point function."""
@@ -242,6 +286,22 @@ class TestRunFunction:
         """Test that run function exists."""
         assert hasattr(cli, "run")
         assert callable(cli.run)
+
+    def test_normal_run(self):
+        """The wrapper invokes the Typer app."""
+        with patch.object(cli, "app") as app:
+            cli.run()
+        app.assert_called_once_with()
+
+    def test_keyboard_interrupt(self, capsys):
+        """Explicit wrapper use exits with the standard interrupt exit code."""
+        with (
+            patch.object(cli, "app", side_effect=KeyboardInterrupt),
+            pytest.raises(SystemExit) as error,
+        ):
+            cli.run()
+        assert error.value.code == 130
+        assert "cancelled" in capsys.readouterr().out
 
 
 @pytest.mark.integration

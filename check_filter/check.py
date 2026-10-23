@@ -9,15 +9,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import os
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from dns import asyncresolver, exception, resolver
 
 if TYPE_CHECKING:
-    from collections.abc import Set
+    from collections.abc import Iterator, Set
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class CheckResult:
         """Check if the domain is free (not blocked)."""
         return self.status == FilterStatus.FREE
 
-    def __iter__(self) -> Any:
+    def __iter__(self) -> Iterator[str | bool]:
         """Allow tuple unpacking for backward compatibility."""
         yield self.domain
         yield self.is_free
@@ -109,10 +110,16 @@ class DomainChecker:
                 Defaults to Iranian ISP blocking IPs.
             nameservers: List of DNS nameservers to use.
                 Defaults to Google DNS (8.8.8.8) or Iranian DNS in CI.
-            timeout: DNS query timeout in seconds. Defaults to 5.0.
+            timeout: Positive, finite DNS query lifetime in seconds. Defaults to 5.0.
+
+        Raises:
+            ValueError: If timeout is not finite and greater than zero.
         """
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError("timeout must be finite and greater than zero")
+
         self.blocked_ips: frozenset[str] = (
-            frozenset(blocked_ips) if blocked_ips else DEFAULT_BLOCKED_IPS
+            frozenset(blocked_ips) if blocked_ips is not None else DEFAULT_BLOCKED_IPS
         )
 
         self.resolver = asyncresolver.Resolver(configure=False)
@@ -141,7 +148,7 @@ class DomainChecker:
             and any error message.
 
         Raises:
-            dns.resolver.NoAnswer: If the domain exists but has no A record.
+            dns.resolver.NoAnswer: If the input is empty or whitespace only.
         """
         if not domain or not domain.strip():
             raise resolver.NoAnswer("Domain can't be empty or whitespace only")
@@ -154,7 +161,10 @@ class DomainChecker:
             ip_list = frozenset(data.address for data in answer)
             logger.debug("Resolved IPs for %s: %s", domain, ip_list)
 
-            is_blocked = bool(ip_list & self.blocked_ips)
+            if not ip_list:
+                raise resolver.NoAnswer()
+
+            is_blocked = not ip_list.isdisjoint(self.blocked_ips)
             status = FilterStatus.BLOCKED if is_blocked else FilterStatus.FREE
 
             return CheckResult(
@@ -169,6 +179,14 @@ class DomainChecker:
                 domain=domain,
                 status=FilterStatus.UNKNOWN,
                 error="Domain does not exist",
+            )
+
+        except resolver.NoAnswer:
+            logger.debug("Domain %s has no A record", domain)
+            return CheckResult(
+                domain=domain,
+                status=FilterStatus.UNKNOWN,
+                error="Domain has no A record",
             )
 
         except resolver.NoNameservers as e:
@@ -187,6 +205,14 @@ class DomainChecker:
                 error=f"DNS query timeout: {e}",
             )
 
+        except exception.DNSException as e:
+            logger.warning("DNS query failed for %s: %s", domain, e)
+            return CheckResult(
+                domain=domain,
+                status=FilterStatus.ERROR,
+                error=f"DNS query failed: {e}",
+            )
+
     async def acheck_many(self, domains: list[str]) -> list[CheckResult]:
         """Check multiple domains concurrently.
 
@@ -194,7 +220,15 @@ class DomainChecker:
             domains: List of domain names to check.
 
         Returns:
-            List of CheckResult objects for each domain.
+            List of CheckResult objects in input order, including duplicates.
+            Unfinished checks are cancelled and awaited if the batch fails
+            or is cancelled.
         """
-        tasks = [self.acheck(domain) for domain in domains]
-        return await asyncio.gather(*tasks, return_exceptions=False)
+        tasks = [asyncio.create_task(self.acheck(domain)) for domain in domains]
+        try:
+            return await asyncio.gather(*tasks)
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)

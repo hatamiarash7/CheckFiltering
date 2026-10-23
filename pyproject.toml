@@ -19,7 +19,7 @@ classifiers = [
   "Operating System :: OS Independent",
   "Typing :: Typed",
 ]
-description = "Check URLs that filtered (or not) in Iran."
+description = "Detect DNS-based domain filtering in Iran."
 homepage = "https://arash-hatami.ir"
 keywords = ["internet", "censorship", "filtering", "dns", "iran", "blocked"]
 license = "MIT"
@@ -27,7 +27,7 @@ name = "check-filter"
 packages = [{include = "check_filter"}]
 readme = "README.md"
 repository = "https://github.com/hatamiarash7/CheckFiltering"
-version = "2.5.2"
+version = "2.6.0"
 
 [tool.poetry.dependencies]
 dnspython = "^2.4.0"
@@ -42,6 +42,7 @@ pytest-cov = "^7.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^26.0.0"
+flake8-pyproject = "^1.2.4"
 isort = "^9.0.0"
 mypy = "^2.0.0"
 pre-commit = "^4.0.0"
@@ -50,7 +51,6 @@ pytest = "^9.0.0"
 pytest-asyncio = "^1.0.0"
 pytest-cov = "^7.0.0"
 ruff = "^0.17.0"
-flake8-pyproject = "^1.2.4"
 
 [tool.poetry.scripts]
 check-filter = "check_filter.cli:app"

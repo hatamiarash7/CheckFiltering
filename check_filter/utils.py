@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+from contextlib import nullcontext
 from typing import TYPE_CHECKING
 
 import validators
@@ -145,7 +146,8 @@ async def print_result(
         show_progress: If True, show live updates as results come in.
 
     Returns:
-        List of CheckResult objects for all checked domains.
+        List of CheckResult objects in completion order. Unfinished checks
+        are cancelled and awaited on failure or cancellation.
     """
     table = create_results_table()
     domain_checker = checker or DomainChecker()
@@ -159,24 +161,27 @@ async def print_result(
         for d in domains
     }
 
-    if show_progress:
-        with Live(table, auto_refresh=False) as live_table:
+    try:
+        with (
+            Live(table, auto_refresh=False) if show_progress else nullcontext()
+        ) as live_table:
             for future in asyncio.as_completed(tasks):
                 result = await future
                 results.append(result)
 
                 domain_text, status_text = format_status(result)
                 table.add_row(domain_text, status_text)
-                live_table.refresh()
-    else:
-        for future in asyncio.as_completed(tasks):
-            result = await future
-            results.append(result)
+                if live_table is not None:
+                    live_table.refresh()
 
-            domain_text, status_text = format_status(result)
-            table.add_row(domain_text, status_text)
+        if not show_progress:
+            rich_print(table)
 
-        rich_print(table)
+    finally:
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
     return results
 
@@ -194,10 +199,7 @@ def read_domains_from_file(path: str) -> list[str]:
         FileNotFoundError: If the file does not exist.
         PermissionError: If the file cannot be read.
     """
-    with open(path, encoding="utf-8") as f:
-        domains = [
-            line.strip()
-            for line in f
-            if line.strip() and not line.strip().startswith("#")
-        ]
+    with open(path, encoding="utf-8-sig") as f:
+        lines = (line.strip() for line in f)
+        domains = [line for line in lines if line and not line.startswith("#")]
     return domains
