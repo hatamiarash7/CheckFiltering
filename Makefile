@@ -1,101 +1,147 @@
-.PHONY: clean install lock run build test test-cov lint format type-check check pre-commit help
-.DEFAULT_GOAL := help
+POETRY ?= poetry
 
 # Colors for pretty output
-BLUE := \033[36m
-GREEN := \033[32m
-YELLOW := \033[33m
-RESET := \033[0m
+BLUE ?= \033[36m
+GREEN ?= \033[32m
+YELLOW ?= \033[33m
+RESET ?= \033[0m
 
-clean: ## Clean build files and caches
-	@echo "$(YELLOW)Cleaning build artifacts...$(RESET)"
-	rm -rf dist build *.egg-info
-	rm -rf .pytest_cache .mypy_cache .ruff_cache
-	rm -rf htmlcov .coverage coverage.xml
-	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+export PYTHONDONTWRITEBYTECODE := 1
+export PYTHONUNBUFFERED := 1
 
+.DEFAULT_GOAL := help
+
+##@ General
+
+.PHONY: help
+help: ## Show this help
+	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make \033[36m<target>\033[0m\n"} \
+		/^[a-zA-Z0-9_-]+:.*##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } \
+		/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
+
+##@ Development
+
+.PHONY: install
 install: ## Install dependencies
 	@echo "$(BLUE)Installing dependencies...$(RESET)"
-	poetry install
+	$(POETRY) install
 
-install-dev: ## Install development dependencies
+.PHONY: install-dev
+install-dev: ## Install development and test dependencies
 	@echo "$(BLUE)Installing development dependencies...$(RESET)"
-	poetry install --with dev,test
+	$(POETRY) install --with dev,test
 
-lock: ## Update poetry.lock
+.PHONY: lock
+lock: ## Update the Poetry lockfile
 	@echo "$(BLUE)Updating lock file...$(RESET)"
-	poetry lock
+	$(POETRY) lock
 
+.PHONY: run
 run: ## Run the CLI application
-	poetry run check-filter
+	$(POETRY) run check-filter
 
-build: clean ## Build package
+.PHONY: build
+build: clean ## Clean artifacts and build the package
 	@echo "$(BLUE)Building package...$(RESET)"
-	poetry build
+	$(POETRY) build
 
-test: ## Run tests
+##@ Quality
+
+.PHONY: test
+test: ## Run all tests, including live DNS tests
 	@echo "$(BLUE)Running tests...$(RESET)"
-	poetry run pytest
+	$(POETRY) run pytest
 
-test-cov: ## Run tests with coverage report
+.PHONY: test-cov
+test-cov: ## Run all tests with coverage reports
 	@echo "$(BLUE)Running tests with coverage...$(RESET)"
-	poetry run pytest --cov=check_filter --cov-report=html --cov-report=term-missing
+	$(POETRY) run pytest --cov=check_filter --cov-report=html --cov-report=term-missing
 
-test-fast: ## Run tests excluding slow/integration tests
+.PHONY: test-fast
+test-fast: ## Run tests excluding slow and integration tests
 	@echo "$(BLUE)Running fast tests...$(RESET)"
-	poetry run pytest -m "not slow and not integration"
+	$(POETRY) run pytest -m "not slow and not integration"
 
-lint: ## Run all linters
+.PHONY: lint
+lint: ## Run Ruff and Pylint
 	@echo "$(BLUE)Running linters...$(RESET)"
-	poetry run ruff check check_filter tests
-	poetry run pylint check_filter
+	$(POETRY) run ruff check check_filter tests
+	$(POETRY) run pylint check_filter
 
-lint-fix: ## Run linters and fix auto-fixable issues
+.PHONY: lint-fix
+lint-fix: ## Fix auto-fixable Ruff issues
 	@echo "$(BLUE)Running linters with auto-fix...$(RESET)"
-	poetry run ruff check --fix check_filter tests
+	$(POETRY) run ruff check --fix check_filter tests
 
-format: ## Format code with black and isort
+.PHONY: format
+format: ## Format code with Black and isort
 	@echo "$(BLUE)Formatting code...$(RESET)"
-	poetry run black check_filter tests
-	poetry run isort check_filter tests
+	$(POETRY) run black check_filter tests
+	$(POETRY) run isort check_filter tests
 
-format-check: ## Check code formatting without making changes
+.PHONY: format-check
+format-check: ## Check formatting without making changes
 	@echo "$(BLUE)Checking code format...$(RESET)"
-	poetry run black --check check_filter tests
-	poetry run isort --check-only check_filter tests
+	$(POETRY) run black --check check_filter tests
+	$(POETRY) run isort --check-only check_filter tests
 
-type-check: ## Run type checking with mypy
+.PHONY: type-check
+type-check: ## Check types with mypy
 	@echo "$(BLUE)Running type checker...$(RESET)"
-	poetry run mypy check_filter
+	$(POETRY) run mypy check_filter
 
-check: format-check lint type-check test ## Run all checks (format, lint, type-check, test)
+# Run checks in order, including when invoked with make -j.
+.PHONY: check
+check: ## Check formatting, lint, types, and all tests in order
+	$(MAKE) format-check
+	$(MAKE) lint
+	$(MAKE) type-check
+	$(MAKE) test
 	@echo "$(GREEN)All checks passed!$(RESET)"
 
-pre-commit: ## Run pre-commit hooks on all files
+# These optional helpers require a local .pre-commit-config.yaml.
+.PHONY: pre-commit
+pre-commit: ## Run all hooks (requires local configuration)
 	@echo "$(BLUE)Running pre-commit hooks...$(RESET)"
-	poetry run pre-commit run --all-files
+	$(POETRY) run pre-commit run --all-files
 
-pre-commit-install: ## Install pre-commit hooks
+.PHONY: pre-commit-install
+pre-commit-install: ## Install hooks (requires local configuration)
 	@echo "$(BLUE)Installing pre-commit hooks...$(RESET)"
-	poetry run pre-commit install
+	$(POETRY) run pre-commit install
 
-docs: ## Generate documentation (placeholder)
+##@ Documentation
+
+# Retain the existing placeholder for compatibility; no generator is configured.
+.PHONY: docs
+docs: ## Report that documentation generation is not configured
 	@echo "$(YELLOW)Documentation generation not configured yet$(RESET)"
 
-release-patch: ## Bump patch version
+##@ Release
+
+# These opt-in helpers only change Poetry metadata, not the library version.
+.PHONY: release-patch
+release-patch: ## Bump the Poetry patch version
 	@echo "$(BLUE)Bumping patch version...$(RESET)"
-	poetry version patch
+	$(POETRY) version patch
 
-release-minor: ## Bump minor version
+.PHONY: release-minor
+release-minor: ## Bump the Poetry minor version
 	@echo "$(BLUE)Bumping minor version...$(RESET)"
-	poetry version minor
+	$(POETRY) version minor
 
-release-major: ## Bump major version
+.PHONY: release-major
+release-major: ## Bump the Poetry major version
 	@echo "$(BLUE)Bumping major version...$(RESET)"
-	poetry version major
+	$(POETRY) version major
 
-help: ## Show this help
-	@echo "$(BLUE)CheckFilter - Development Commands$(RESET)"
-	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' Makefile | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)%-20s$(RESET) %s\n", $$1, $$2}'
+##@ Cleanup
+
+.PHONY: clean
+clean: ## Remove build artifacts, reports, and project caches
+	@echo "$(YELLOW)Cleaning build artifacts...$(RESET)"
+	rm -rf dist build check_filter.egg-info
+	rm -rf .pytest_cache .mypy_cache .ruff_cache
+	rm -rf htmlcov .coverage coverage.xml junit.xml
+	find check_filter tests -type d -name __pycache__ -exec rm -rf {} +
+	find check_filter tests -type f -name "*.pyc" -delete
